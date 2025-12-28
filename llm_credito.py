@@ -4,6 +4,7 @@ from langchain_core.output_parsers.string import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 import time
+import re
 
 def _parse_valor(x):
     s = str(x).strip()
@@ -104,16 +105,45 @@ chain = prompt | chat | StrOutputParser()
 # =========================
 # Execução
 # =========================
-df = ler_csv_cartao("faturas/fatura-945219970.csv")
+df = ler_csv_cartao("faturas/fatura-945219970 copy.csv")
 
-# Monta o texto que entra no {text}
-df["LLM_TEXT"] = df.apply(
-    lambda r: f"Valor: {r['Valor']}\nDescrição: {r['Lançamento']}",
+parc_re = re.compile(r"(\d{2})/(\d{2})")
+
+def extrair_parcela(lancamento: str):
+    if pd.isna(lancamento):
+        return pd.NA, pd.NA
+
+    s = str(lancamento)
+    matches = parc_re.findall(s)  # lista de tuplas [('09','12'), ('14','10'), ...]
+
+    # pega o último match válido (mais comum no cartão)
+    for a, t in reversed(matches):
+        atual = int(a)
+        total = int(t)
+
+        # validação: parcela faz sentido
+        if total >= 2 and 1 <= atual <= total:
+            return atual, total
+
+    return pd.NA, pd.NA
+
+df[["ParcelaAtual", "ParcelaTotal"]] = df["Lançamento"].apply(
+    lambda x: pd.Series(extrair_parcela(x))
+)
+
+df["Parcela"] = df.apply(
+    lambda r: f"{int(r['ParcelaAtual']):02d}/{int(r['ParcelaTotal']):02d}"
+    if pd.notna(r["ParcelaTotal"]) else "",
     axis=1
 )
 
+df["Lancamento_Limpo"] = df["Lançamento"].str.replace(parc_re, " ", regex=True)\
+                                        .str.replace(r"\s+", " ", regex=True)\
+                                        .str.strip()
+
+
 # Deduplica (menos chamadas)
-texts = df["LLM_TEXT"].astype(str).fillna("")
+texts = df["Lancamento_Limpo"].astype(str).fillna("")
 texts_unicos = texts.unique().tolist()
 
 # Batch controlado para não estourar RPM
@@ -136,7 +166,5 @@ for i in range(0, len(texts_unicos), BATCH_SIZE):
 mapa_texto_para_cat = dict(zip(texts_unicos, categorias_unicas))
 df["Categoria"] = texts.map(mapa_texto_para_cat)
 
-print(df.head(10))
-
-# df.to_csv("finances_cartao.csv", index=False)
-# print("OK: arquivo 'finances_cartao.csv' gerado.")
+df.to_csv("finances_cartao.csv", index=False)
+print("OK: arquivo 'finances_cartao.csv' gerado.")
