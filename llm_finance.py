@@ -71,7 +71,7 @@ prompt = PromptTemplate.from_template(template=template)
 
 
 # Groq
-chat = ChatGroq(model="llama-3.1-70b-versatile")
+chat = ChatGroq(model="llama-3.3-70b-versatile")
 chain = prompt | chat | StrOutputParser()
 
 categorias = chain.batch(list(df["Descrição"].values))
