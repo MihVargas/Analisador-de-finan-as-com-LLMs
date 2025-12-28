@@ -11,7 +11,16 @@ df["Mês"] = df["Data"].apply(lambda x: "-".join(x.split("-")[:-1]))
 df["Data"] = pd.to_datetime(df["Data"])
 df["Data"] = df["Data"].apply(lambda x: x.date())
 df = df[df["Categoria"]!="Receitas"]
-df["Valor"] = 1
+df["ValorCategoria"] = 1
+
+
+entrada = df["Valor"].where(df["Valor"] > 0, 0).sum().round(2)
+saida = (-df["Valor"]).where(df["Valor"] < 0, 0) .sum().round(2)
+
+st.text(f"Total Entradas: R$ {entrada}")
+st.text(f"Total Saídas: R$ {saida}")
+
+
 
 def filter_data(df, mes, selected_categories):
     df_filtered = df[df['Mês'] == mes]
@@ -40,12 +49,13 @@ df_filtered = filter_data(df, mes, selected_categories)
 c1, c2 = st.columns([0.6, 0.4])
 
 # c1.subheader("Tabela de Finanças Filtradas")
-c1.dataframe(df_filtered)
+cols = ["Data", "Mês", "Descrição", "Valor", "Categoria"]
+c1.dataframe(df_filtered[cols])
  
 
 # c2.subheader("Distribuição de Categorias")
-category_distribution = df_filtered.groupby("Categoria")["Valor"].sum().reset_index()
-fig = px.pie(category_distribution, values='Valor', names='Categoria', 
+category_distribution = df_filtered.groupby("Categoria")["ValorCategoria"].sum().reset_index()
+fig = px.pie(category_distribution, values='ValorCategoria', names='Categoria', 
             title='Distribuição por Categoria', hole=0.3
                 )
 c2.plotly_chart(fig, use_container_width=True)
