@@ -3,7 +3,9 @@ import streamlit as st
 import pandas as pd
 from streamlit_extras.metric_cards import style_metric_cards
 
-BKP_PATH = "bkp/finances_cartao.csv"
+BKP_PATH_DESPESA = "bkp/finances_cartao.csv"
+BKP_PATH_RECEITA = "bkp/receitas.csv"
+BKP_PATH_DESPESA_FIXA = "bkp/despesa_fixa.csv"
 
 def format_brl(value) -> str:
     """
@@ -23,18 +25,22 @@ def format_brl(value) -> str:
 
 
 def carregar_backup():
-    if not os.path.exists(BKP_PATH):
+    if not os.path.exists(BKP_PATH_DESPESA):
         st.warning("Ainda não existe backup em bkp/finances_cartao.csv. Faça um upload e processe primeiro.")
         st.stop()
-    return pd.read_csv(BKP_PATH)
+    return pd.read_csv(BKP_PATH_DESPESA)
 
 
-def render_total(df: pd.DataFrame):
+def render_total(df: pd.DataFrame, mes_sel: str):
     # garanta numérico
     df["Valor"] = pd.to_numeric(df["Valor"], errors="coerce")
 
-    receita = 10000
-    despesas_fixas = 4563
+    df_receita = pd.read_csv(BKP_PATH_RECEITA)
+    df_receita = df_receita[df_receita["MesRef"] == mes_sel]
+    receita = df_receita["Valor"].sum().round(2)
+
+    df_despesa_fixa = pd.read_csv(BKP_PATH_DESPESA_FIXA)
+    despesas_fixas = df_despesa_fixa["Valor"].sum().round(2)
 
     valor_total = df["Valor"].sum().round(2)
 
@@ -46,7 +52,6 @@ def render_total(df: pd.DataFrame):
         (df["ParcelaAtual"] == df["ParcelaTotal"])
     ].shape[0]
 
-    limite_gasto = (8000-valor_total).round(2)
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Receita",  value=format_brl(receita))
@@ -72,7 +77,7 @@ def render_metrics(df: pd.DataFrame):
     limite_gasto = (8000-valor_total).round(2)
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Total",  value=format_brl(valor_total), delta=format_brl(limite_gasto), help="Soma dos valores sem aplicar filtros")
+    col1.metric("Total",  value=format_brl(valor_total), help="Soma dos valores sem aplicar filtros")
     col2.metric("Reembolsos & Créditos", format_brl(valor_reembolso), help="Soma dos reembolsos e créditos")
     col3.metric("Parcelas encerrando", parcela_ending, help="Número de parcelas que estão na última parcela")
     col4.metric("Total parcelas", total_parcelas, help="Número total de lançamentos parcelados")
@@ -93,11 +98,18 @@ def render_metrics_grupado(df: pd.DataFrame):
 
     total_parcelas = df[df["ParcelaAtual"].notna()].shape[0]
 
+    value_ending = df[
+        (df["ParcelaAtual"].notna()) &
+        (df["ParcelaTotal"].notna()) &
+        (df["ParcelaAtual"] == df["ParcelaTotal"])
+    ]["Valor"].sum().round(2)
+
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Total",  value=format_brl(valor_total), help="Soma dos valores após filtros")
     col2.metric("Reembolsos & Créditos", format_brl(valor_reembolso), help="Soma dos reembolsos e créditos")
     col3.metric("Parcelas encerrando", parcela_ending, help="Número de parcelas que estão na última parcela")
     col4.metric("Total parcelas", total_parcelas, help="Número total de lançamentos parcelados")
+    col5.metric("Redução de valor próximo mes", format_brl(value_ending), help="Com base nas parcelas encerrando, estimativa de redução de gastos no próximo mês")
     style_metric_cards()
 
 def filtrar_pagamento_efetuado(df: pd.DataFrame) -> pd.DataFrame:
@@ -107,7 +119,7 @@ def filtrar_pagamento_efetuado(df: pd.DataFrame) -> pd.DataFrame:
         return df[mask].copy()
     return df
 
-def processar_upload(agente, uploaded, acao: str, salvar_csv: bool):
+def processar_upload(agente, uploaded, acao: str, salvar_csv: bool, mes_ref):
     progress = st.sidebar.progress(0)
     status = st.sidebar.empty()
 
@@ -115,6 +127,8 @@ def processar_upload(agente, uploaded, acao: str, salvar_csv: bool):
         status.write("📥 Lendo CSV do cartão...")
         progress.progress(15)
         df = agente.ler_csv_cartao(uploaded)
+
+        df["MesRef"] = mes_ref 
 
         if acao == "Só ler CSV":
             progress.progress(100)
@@ -153,18 +167,24 @@ def processar_upload(agente, uploaded, acao: str, salvar_csv: bool):
             status.write("💾 Salvando arquivo...")
             progress.progress(95)
             os.makedirs("bkp", exist_ok=True)
-            df.to_csv(BKP_PATH, index=False)
+            df.to_csv(BKP_PATH_DESPESA, index=False)
 
         progress.progress(100)
         status.success("✅ Processamento concluído.")
         return df
+    
+def filtro_data(df: pd.DataFrame) -> pd.DataFrame:
+        # Período
+    meses = sorted(df["MesRef"].dropna().unique().tolist())
+
+    mes_sel = st.sidebar.selectbox("Mês de referência", meses)
+
+    df = df[df["MesRef"] == mes_sel]
+
+    return df, mes_sel
 
 def aplicar_filtros(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-
-    # garante tipos
-    if "Data" in df.columns:
-        df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
     if "Valor" in df.columns:
         df["Valor"] = pd.to_numeric(df["Valor"], errors="coerce")
 
@@ -184,20 +204,7 @@ def aplicar_filtros(df: pd.DataFrame) -> pd.DataFrame:
         so_parcelado = st.sidebar.checkbox("Somente parcelados", value=False)
     else:
         so_parcelado = False
-
-    # Período
-    if "Data" in df.columns and df["Data"].notna().any():
-        data_min = df["Data"].min()
-        data_max = df["Data"].max()
-        intervalo = st.sidebar.date_input(
-            "Período",
-            value=(data_min.date(), data_max.date()),
-            min_value=data_min.date(),
-            max_value=data_max.date(),
-        )
-        if isinstance(intervalo, tuple) and len(intervalo) == 2:
-            ini, fim = intervalo
-            df = df[(df["Data"].dt.date >= ini) & (df["Data"].dt.date <= fim)]
+    
 
     # Busca por texto
     if "Lancamento_Limpo" in df.columns:
@@ -205,11 +212,6 @@ def aplicar_filtros(df: pd.DataFrame) -> pd.DataFrame:
         if q.strip():
             df = df[df["Lancamento_Limpo"].astype(str).str.contains(q, case=False, na=False)]
 
-    # Range de valor (opcional)
-    if "Valor" in df.columns and df["Valor"].notna().any():
-        vmin, vmax = float(df["Valor"].min()), float(df["Valor"].max())
-        vr = st.sidebar.slider("Valor (range)", min_value=vmin, max_value=vmax, value=(vmin, vmax))
-        df = df[(df["Valor"] >= vr[0]) & (df["Valor"] <= vr[1])]
 
     # aplica categoria
     if "Categoria" in df.columns and cat_sel:
@@ -225,8 +227,10 @@ def aplicar_filtros(df: pd.DataFrame) -> pd.DataFrame:
 
 def render_result(df: pd.DataFrame):
     st.subheader("Original")
-    render_total(df)
 
+    df, mes_sel = filtro_data(df)
+    
+    render_total(df, mes_sel)
 
     st.subheader("Resultado")
     render_metrics(df)

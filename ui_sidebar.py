@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_extras.badges import badge
+from datetime import date
 
 def render_sidebar():
     # estados padrão
@@ -13,6 +14,25 @@ def render_sidebar():
     # Expander: Processamento
     # =========================
     with st.sidebar.expander("⚙️ Processamento", expanded=st.session_state["exp_processamento"]):
+
+        col1, col2 = st.columns(2)
+        mes = col1.selectbox(
+            "Mês",
+            options=list(range(1, 13)),
+            index=date.today().month - 1,
+            format_func=lambda m: f"{m:02d}",
+        )
+
+        ano = col2.number_input(
+            "Ano",
+            min_value=2020,
+            max_value=2100,
+            value=date.today().year,
+            step=1,
+        )
+
+        mes_ref = f"{ano}-{mes:02d}" 
+        
         fonte = st.radio(
             "Fonte dos dados",
             ["Upload (CSV do cartão)", "Ler do backup (bkp/finances_cartao.csv)"],
@@ -66,6 +86,7 @@ def render_sidebar():
         "acao": st.session_state["acao"],
         "salvar_csv": st.session_state["salvar_csv"],
         "rodar": rodar,
+        "mes_ref": mes_ref,
     }
 
 

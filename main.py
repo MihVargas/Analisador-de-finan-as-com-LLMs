@@ -22,7 +22,13 @@ if ui["uploaded"] is None:
     st.stop()
 
 if ui["rodar"]:
-    df = processar_upload(agente, ui["uploaded"], ui["acao"], ui["salvar_csv"])
+    df = processar_upload(
+        agente,
+        ui["uploaded"],
+        ui["acao"],
+        ui["salvar_csv"],
+        ui["mes_ref"],
+    )
     render_result(df)
 else:
     st.info("Escolha as opções na barra lateral e clique em Executar.")

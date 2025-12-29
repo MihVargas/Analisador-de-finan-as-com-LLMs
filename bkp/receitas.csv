@@ -1,0 +1,22 @@
+ID,Tipo,Pessoa,Valor,Vezes,Data,Recebido,Observacao,ParcelaAtual,ParcelaTotal,MesRef
+f4e6afca-3ec1-47a6-9517-559d03b0cda1,Reembolso,pai,190.0,8,2026-01-10,False,Parcelas sofá 2,1.0,8.0,2026-01
+2d9b8343-256e-4de7-be53-dc9e7278a94b,Reembolso,pai,190.0,8,2026-02-10,False,Parcelas sofá 2,2.0,8.0,2026-02
+44eb25c6-db9b-4100-a269-354ca0bde03e,Reembolso,pai,190.0,8,2026-03-10,False,Parcelas sofá 2,3.0,8.0,2026-03
+dd08f20e-7e98-4e7e-94cd-5fe657ad27a9,Reembolso,pai,190.0,8,2026-04-10,False,Parcelas sofá 2,4.0,8.0,2026-04
+5e34d8f7-c748-4b5f-8e99-e981c6dee714,Reembolso,pai,190.0,8,2026-05-10,False,Parcelas sofá 2,5.0,8.0,2026-05
+d569f354-5876-4442-8657-7f2b6b5a5632,Reembolso,pai,190.0,8,2026-06-10,False,Parcelas sofá 2,6.0,8.0,2026-06
+7310c12e-9cd8-4240-9f66-78ee31a00d5b,Reembolso,pai,190.0,8,2026-07-10,False,Parcelas sofá 2,7.0,8.0,2026-07
+571420c3-94c2-4943-b50d-9c1659e99e31,Reembolso,pai,190.0,8,2026-08-10,False,Parcelas sofá 2,8.0,8.0,2026-08
+b2adaca6-e85f-454f-b2cf-3c49428b6536,Reembolso,pai,190.0,7,2026-01-10,False,Parcelas sofá 1,1.0,7.0,2026-01
+1d77cf3f-d1ec-4da7-bb3d-4992ad08988d,Reembolso,pai,190.0,7,2026-02-10,False,Parcelas sofá 1,2.0,7.0,2026-02
+1ee6a25b-3810-4cdf-b8cd-6695ed96e7ac,Reembolso,pai,190.0,7,2026-03-10,False,Parcelas sofá 1,3.0,7.0,2026-03
+5f8895ee-7982-45e0-8ecf-0729b22ebb79,Reembolso,pai,190.0,7,2026-04-10,False,Parcelas sofá 1,4.0,7.0,2026-04
+81902b9d-19a6-489a-82e2-59534ba17a53,Reembolso,pai,190.0,7,2026-05-10,False,Parcelas sofá 1,5.0,7.0,2026-05
+5080ee79-f0f3-4a8e-9ee4-8484cd3341f8,Reembolso,pai,190.0,7,2026-06-10,False,Parcelas sofá 1,6.0,7.0,2026-06
+23272b17-2a33-43ec-9a94-2660d2d9f1d4,Reembolso,pai,190.0,7,2026-07-10,False,Parcelas sofá 1,7.0,7.0,2026-07
+78874049-083b-4e51-9e4d-a922313bac00,Salário,Ambev 01,5500.0,1,2026-01-01,False,,,,2026-01
+5001ce92-a33f-4b28-9c6f-cd032a005757,Reembolso,euda,110.0,1,2026-01-10,False,,,,2026-01
+3d2b9d20-68a1-4fd2-8d1c-a2a992ef9754,Reembolso,euda,380.0,1,2026-01-10,False,,,,2026-01
+2c6f1c62-68b7-4475-a857-239262cf1175,Salário,Ambev20/11,3500.0,1,2026-01-01,False,,,,2026-01
+dc98e01c-2ca3-49af-8b0b-988f570074ca,Reembolso,viagem,800.0,1,2026-01-10,False,,,,2026-01
+e8c3ee43-cf4b-4930-9072-66b0d0ceb241,Reembolso,pai,1000.0,1,2026-01-10,False,presentes,,,2026-01

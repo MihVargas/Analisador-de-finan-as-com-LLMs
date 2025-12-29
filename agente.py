@@ -229,7 +229,7 @@ Responda APENAS com o nome exato da categoria (uma linha).
         df = df[[col_data, col_lanc, col_val]].copy()
         df.columns = ["Data", "Lançamento", "Valor"]
 
-        df["Data"] = pd.to_datetime(df["Data"], errors="coerce").dt.date
+        df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
         df["Valor"] = df["Valor"].apply(self._parse_valor)
 
         df["Lançamento"] = (
